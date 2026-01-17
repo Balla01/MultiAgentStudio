@@ -3,3 +3,6 @@ data
 data/*
 /data/*
 ./data/*
+!src/studio/data
+*.pyc
+__pycache__/

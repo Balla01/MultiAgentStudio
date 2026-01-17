@@ -1,8 +1,0 @@
-{
-  "source_file": "../data/itf/extracted_data.txt",
-  "last_processed_index": 1470,
-  "timestamp": "2026-01-14T20:52:52.924540",
-  "db_file": "../data/vdbs/trade_finance_vectors.db",
-  "total_chunks": 2158,
-  "progress_percentage": 68.4
-}
