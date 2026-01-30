@@ -24,7 +24,7 @@ MILVUS_HOST = "localhost"
 MILVUS_PORT = "19530"
 EMBEDDING_MODEL_NAME = "Alibaba-NLP/gte-large-en-v1.5"
 RERANKING_MODEL_NAME = "cross-encoder/ms-marco-MiniLM-L-6-v2"
-MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY", "0TD9nsBifR6Lkr1kOag9aikbCBImYfGg")
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
 MISTRAL_MODEL = "mistral/mistral-large-latest"
 
 

@@ -2,7 +2,7 @@ import gradio as gr
 from studio.core.config_manager import ConfigManager
 from studio.core.database_manager import DatabaseManager
 from studio.data import DataIngestionPipeline
-from studio.core.agent_factory import AgentFactory
+from studio.services.crew_factory import CrewFactory
 from studio.services import AgentService, RAGService, ChatService
 from studio.ui.components.data_uploader import create_data_uploader
 from studio.ui.components.agent_selector import create_agent_selector
@@ -13,7 +13,7 @@ def create_app(config: ConfigManager,
                pipeline: DataIngestionPipeline,
                agent_service: AgentService,
                chat_service: ChatService,
-               agent_factory: AgentFactory):
+               crew_factory: CrewFactory):
 
     ui_config = config.get_ui_config()
     
@@ -30,10 +30,14 @@ def create_app(config: ConfigManager,
         
         with gr.Tab("⚙️ Agent Configuration"):
             agent_selector_col, session_state, rag_enabled, agent_dbs = create_agent_selector(
-                agent_service, agent_factory
+                agent_service
             )
         
         with gr.Tab("💬 Chat"):
             create_chat_interface(chat_service, session_state, rag_enabled, agent_dbs)
+            
+        with gr.Tab("🧠 Memory Dashboard"):
+            from studio.ui.components.memory_dashboard import create_memory_dashboard
+            create_memory_dashboard(crew_factory)
             
     return demo

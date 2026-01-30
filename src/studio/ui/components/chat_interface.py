@@ -22,6 +22,10 @@ def create_chat_interface(chat_service: ChatService, session_state, rag_enabled,
         
         with gr.Row():
             clear_btn = gr.Button("Clear History")
+            use_history = gr.Checkbox(
+                label="Use history in prompt",
+                value=False
+            )
             
             with gr.Accordion("Debug Info", open=False):
                 query_info = gr.JSON(label="Last Query Info")
@@ -33,7 +37,7 @@ def create_chat_interface(chat_service: ChatService, session_state, rag_enabled,
                 scale=2
             )
         
-        def respond(message, history, session_id, use_rag, enabled_dbs, wid):
+        def respond(message, history, session_id, use_rag, enabled_dbs, wid, use_history_flag):
             if not session_id:
                 history.append({"role": "user", "content": message})
                 history.append({"role": "assistant", "content": "⚠️ Please create an agent session first in the 'Agent Configuration' tab."})
@@ -48,7 +52,8 @@ def create_chat_interface(chat_service: ChatService, session_state, rag_enabled,
                 message=message,
                 use_rag=use_rag,
                 enabled_dbs=enabled_dbs if use_rag else None,
-                work_item_name=wid
+                work_item_name=wid,
+                use_history=use_history_flag
             )
             
             history.append({"role": "assistant", "content": response})
@@ -59,13 +64,13 @@ def create_chat_interface(chat_service: ChatService, session_state, rag_enabled,
         
         send_btn.click(
             respond,
-            inputs=[msg_input, chatbot, session_state, rag_enabled, agent_dbs, work_item_id],
+            inputs=[msg_input, chatbot, session_state, rag_enabled, agent_dbs, work_item_id, use_history],
             outputs=[chatbot, msg_input]
         )
         
         msg_input.submit(
             respond,
-            inputs=[msg_input, chatbot, session_state, rag_enabled, agent_dbs, work_item_id],
+            inputs=[msg_input, chatbot, session_state, rag_enabled, agent_dbs, work_item_id, use_history],
             outputs=[chatbot, msg_input]
         )
         

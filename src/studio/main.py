@@ -6,7 +6,8 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 
 from studio.core import DatabaseManager, MilvusProvider, Neo4jProvider, SQLProvider, ConfigManager
-from studio.core.agent_factory import AgentFactory
+from studio.core.memory_config import MemoryConfigManager
+from studio.services.crew_factory import CrewFactory
 from studio.services import AgentService, RAGService, ChatService
 from studio.data import DataIngestionPipeline
 from studio.ui import create_app
@@ -20,6 +21,15 @@ def main():
     
     # 1. Load Config
     config = ConfigManager()
+
+    # 1.5 Setup Memory Config
+    memory_config = MemoryConfigManager(
+        storage_dir="./storage/memory",
+        embedding_model="Alibaba-NLP/gte-large-en-v1.5",
+        enable_short_term=True,
+        enable_long_term=True,
+        enable_entity=True
+    )
     
     # 2. Setup Database Manager
     db_manager = DatabaseManager()
@@ -45,15 +55,42 @@ def main():
     
     # Resolve relative path
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    # Assuming config path is relative to src/studio or project root.
-    # We'll try to find it relative to project root usually
     project_root = os.path.abspath(os.path.join(base_dir, "../../"))
     abs_crews_dir = os.path.join(project_root, crews_dir)
     
-    agent_factory = AgentFactory(crews_directory=abs_crews_dir)
-    agent_service = AgentService(agent_factory, db_manager)
+    # Use CrewFactory with Memory
+    crew_factory = CrewFactory(
+        crews_directory=abs_crews_dir,
+        memory_config=memory_config,
+        db_manager=db_manager
+    )
+    
+    # Update AgentService to use CrewFactory (Wait, AgentFactory is replaced by CrewFactory?)
+    # The prompt implies CrewFactory replaces AgentFactory or AgentFactory logic is inside. 
+    # But AgentService depends on AgentFactory currently.
+    # Let's check AgentService signature. I will assume we should pass crew_factory instead of agent_factory if they have compatible interfaces
+    # Or I should keep AgentFactory but maybe CrewFactory is better.
+    # The User's prompt uses `from studio.services.crew_factory import CrewFactory` and creates `CrewFactory`.
+    # And then passes `crew_factory` to `create_agent_selector`.
+    # It does NOT instantiate AgentService in the example snippet! 
+    # But current main.py does.
+    # I should check if I need to update AgentService or if CrewFactory is enough for the UI components.
+    # The UI components in the prompt:
+    # create_agent_selector(crew_factory)
+    # create_chat_interface(chat_service, ...)
+    # create_memory_dashboard(crew_factory)
+    # ChatService takes crew_factory?
+    # "chat_service = ChatService(crew_factory, rag_service)" -> User prompt.
+    
+    # So I need to verify ChatService and update it if needed.
+    # For now, I will use CrewFactory in main.py.
+
+    # Update AgentService to use CrewFactory
+    agent_service = AgentService(crew_factory, db_manager)
+    
     rag_service = RAGService(db_manager)
-    chat_service = ChatService(agent_service, rag_service)
+    
+    chat_service = ChatService(agent_service, rag_service) 
     
     # 4. Setup Data Pipeline
     pipeline = DataIngestionPipeline(db_manager)
@@ -65,11 +102,13 @@ def main():
         pipeline,
         agent_service,
         chat_service,
-        agent_factory
+        crew_factory
     )
     
     # 6. Launch
     logger.info("Global launch...")
+    crew_factory.print_memory_summary()
+    
     app.launch(
         server_name="0.0.0.0", 
         server_port=7860,

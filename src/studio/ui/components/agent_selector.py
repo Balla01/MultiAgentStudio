@@ -1,9 +1,10 @@
 import gradio as gr
 import uuid
-from studio.core.agent_factory import AgentFactory
+from studio.services.crew_factory import CrewFactory
 from studio.services.agent_service import AgentService
 
-def create_agent_selector(agent_service: AgentService, agent_factory: AgentFactory):
+def create_agent_selector(agent_service: AgentService):
+    # agent_factory arg removed as agent_service handles it
     
     with gr.Column() as selector:
         gr.Markdown("## Agent Configuration")
@@ -16,7 +17,7 @@ def create_agent_selector(agent_service: AgentService, agent_factory: AgentFacto
         )
         
         # Crew selection
-        available_crews = agent_factory.list_available_crews()
+        available_crews = agent_service.list_available_crews()
         crew_dropdown = gr.Dropdown(
             choices=available_crews,
             label="Select Crew",

@@ -1,0 +1,5 @@
+
+step1 :  export MISTRAL_API_KEY=0TD9nsBifR6Lkr1kOag9aikbCBImYfGg
+step2 : export OPENAI_API_KEY="temp key just for execution"
+
+python src/studio/main.py
